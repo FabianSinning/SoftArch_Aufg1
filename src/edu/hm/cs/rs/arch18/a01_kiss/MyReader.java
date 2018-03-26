@@ -101,15 +101,31 @@ public class MyReader implements CSVReader {
 			arr = new String[length];
 			
 			for(int firstindex=0,secondindex=0,arrayindex=0; secondindex != s.length() && firstindex != s.length();secondindex++){
-				if(s.charAt(secondindex) == ',' && s.charAt(secondindex-1) != '\\'){
-					firstindex = (firstindex == 0)? 0 : ++firstindex;
-					arr[arrayindex] = s.substring(firstindex, secondindex);
-					arrayindex++;
+				if(secondindex == s.length()-1 && s.charAt(secondindex) != ','){
+					arr[arrayindex] = s.substring(firstindex+1, secondindex+1); //System.out.println(s.substring(firstindex+1, secondindex+1));
+					secondindex++;
 					firstindex = secondindex;
 				}
-				else if(secondindex == s.length()-1){
-					arr[arrayindex] = s.substring(firstindex+1, secondindex+1); //System.out.println(s.substring(firstindex+1, secondindex+1));
+				else if(secondindex == s.length()-1 && s.charAt(secondindex) == ','){
+					firstindex = (firstindex == 0)? 0 : ++firstindex;
+					arr[arrayindex] = s.substring(firstindex, secondindex); //System.out.println(s.substring(firstindex+1, secondindex+1));
+					secondindex++;
+					arr[++arrayindex] = "";
 					firstindex = secondindex;
+				}
+				else if(s.charAt(secondindex) == ',' && s.charAt(secondindex-1) != '\\'){
+					if(s.charAt(secondindex-1) == ',') {
+						//firstindex = (firstindex == 0)? 0 : ++firstindex;
+						firstindex = secondindex;
+						arr[arrayindex] = "";
+						arrayindex++;
+					}
+					else {
+						firstindex = (firstindex == 0)? 0 : ++firstindex;
+						arr[arrayindex] = s.substring(firstindex, secondindex);
+						arrayindex++;
+						firstindex = secondindex;
+					}
 				}
 			}
 			markReader(br);
