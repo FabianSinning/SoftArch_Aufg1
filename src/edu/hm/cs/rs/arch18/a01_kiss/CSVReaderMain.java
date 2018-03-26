@@ -30,8 +30,7 @@ public class CSVReaderMain {
                              
                        
         final CSVReader csvReader = new MyReader();//r -> null;  // Weisen Sie hier Ihren CSVReader zu.
-        //Test
-        System.out.println("Test!");
+        
         System.out.println(Stream.of(csvReader.read(reader))
                            .map(Arrays::toString)
                            .collect(Collectors.joining(",\n", "[", "]")));
