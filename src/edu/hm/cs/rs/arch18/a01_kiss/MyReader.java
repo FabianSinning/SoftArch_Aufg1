@@ -135,6 +135,7 @@ public class MyReader implements CSVReader {
 		
 		checkCSVFormatIsCorrect(reader);
 		
+		System.out.println("Test!");
 		//System.out.println(countRows(buffreader));
 		
 		length = countRows(buffreader);
