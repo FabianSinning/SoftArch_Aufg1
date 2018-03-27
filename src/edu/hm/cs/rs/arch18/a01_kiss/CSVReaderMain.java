@@ -26,9 +26,8 @@ public class CSVReaderMain {
      */
     public static void main(String... args) throws IOException {
         final Reader reader = args.length > 0
-                             ? new StringReader(args[0].replace('$', '\n')):new InputStreamReader(System.in);
-                             
-                       
+                             ? new StringReader(args[0].replace('$', '\n')) : new InputStreamReader(System.in);
+             
         final CSVReader csvReader = new MyReader();//r -> null;  // Weisen Sie hier Ihren CSVReader zu.
         
         System.out.println(Stream.of(csvReader.read(reader))
