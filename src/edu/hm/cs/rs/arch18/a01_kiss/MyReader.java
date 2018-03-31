@@ -5,11 +5,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 /**
- * MyReader kann genutzt werden, um den Inhalt aus CSV Dateien zu lesen. Um
- * Daten zu lesen, kann die <b>read</b> Methode genutzt werden, die als Argument
- * ein Reader Objekt auf die CSV Datei benötigt.
- * 
- * @author fabian
+ * @author Felix Lang
  *
  */
 public class MyReader implements CSVReader {
@@ -19,43 +15,13 @@ public class MyReader implements CSVReader {
 	private static boolean FLAG = false;
 	private static final char BACKSLASH = '\\';
 	private static final char NEWLINE = '\n';
-	
+
 	public MyReader() {
 	}
 
 	/**
-	 * Prüft, ob das CSV Format korrekt ist. Ist dies nicht der Fall, bricht es mit
-	 * einer Exception ab.
-	 * 
-	 * @param reader
-	 *            Reader Ein Reader der CSV Datei
-	 * @throws IllegalArgumentException
-	 *             Falls das CSV Format nicht korrekt ist
-	 * @throws IOException
-	 *             Falls beim Lesen ein Fehler auftritt
-	 */
-	private void checkCSVFormatIsCorrect(Reader reader) throws IllegalArgumentException, IOException {
-		int a = 0;
-		int b = 0;
-		markReader(reader);
-		do {
-			// a = reader.read();
-			b = reader.read();
-			if (b == -1 && (char) a != '\n') {
-				reader.close();
-				throw new IllegalArgumentException();
-			} else if (a == '\\' && (b == -1 || (char) b == '\n')) {
-				reader.close();
-				throw new IllegalArgumentException();
-			}
-			a = b;
-		} while (b != -1);
-		resetReader(reader);
-	}
-
-	/**
-	 * Markiert die aktuelle Position des Readers. Ein Aufruf von resetReader setzt
-	 * den Pointer des Readers an diese Position zurück.
+	 * Markiert die aktuelle Position des Readers. Ein Aufruf von resetReader
+	 * setzt den Pointer des Readers an diese Position zurueck.
 	 * 
 	 * @param reader
 	 *            Reader Ein Reader der CSV Datei
@@ -67,8 +33,8 @@ public class MyReader implements CSVReader {
 	}
 
 	/**
-	 * Setzt den Reader auf die Position zurück,die zuvor. durch einen Aufruf von
-	 * markReader markiert wurde
+	 * Setzt den Reader auf die Position zurueck,die zuvor. durch einen Aufruf
+	 * von markReader markiert wurde
 	 * 
 	 * @param reader
 	 *            Reader Ein Reader der CSV Datei
@@ -80,39 +46,16 @@ public class MyReader implements CSVReader {
 	}
 
 	/**
-	 * Zählt Anzahl der Zeilen der CSV Datei. Die Position des Readers wird am
-	 * DateiAnfang markiert und vor dem Retunieren der Methode zurückgesetzt.
-	 * 
-	 * @param reader
-	 *            Reader Ein Reader der CSV Datei
-	 * @throws IOException
-	 *             Falls beim Lesen ein Fehler auftritt
-	 * @return int Anzahl der Zeilen
-	 */
-	private int countRows(Reader reader) throws IOException {
-		int rows = 0;
-
-		markReader(reader);
-		for (int s = 0; s != -1; s = reader.read()) {
-			if ((char) s == '\n')
-				rows++;
-		}
-		resetReader(reader);
-
-		return rows;
-	}
-
-	/**
 	 * Liest bis zu einem LineFeed und gibt den Inhalt jeder Zeile durch ein
-	 * String[] Array zurück.Die Position des Readers wird beim letzten gelesenen
-	 * Zeichen gespeichert.
+	 * String[] Array zurueck.Die Position des Readers wird beim letzten
+	 * gelesenen Zeichen gespeichert.
 	 * 
 	 * @param br
 	 *            BufferedReader Reader auf einen CSV Text
 	 * @throws IOException
 	 *             falls beim Lesen ein Fehler auftritt
 	 * @return arr String[] String Array das den Inhalt der Zellen einer Zeile
-	 *         enthält
+	 *         enthaelt
 	 */
 	private String[] getData(BufferedReader br) throws IOException {
 		final String[] arr;
@@ -175,17 +118,19 @@ public class MyReader implements CSVReader {
 		resetReader(br);
 		return arr;
 	}
-	
-	//prints out the inserted Arguments, for debugging purposes only
+
+	// prints out the inserted Arguments, for debugging purposes only
 	private void printArgument(Reader reader) throws IOException {
 		String out = "";
 		char c;
-		
+
 		int i = reader.read();
-		if(i == -1) System.out.println("Empty Input!");
-		while (i != -1){
-			c = (char)i;
-			if (c == '\n') c = '$';
+		if (i == -1)
+			System.out.println("Empty Input!");
+		while (i != -1) {
+			c = (char) i;
+			if (c == '\n')
+				c = '$';
 			out += c;
 			i = reader.read();
 		}
@@ -194,161 +139,188 @@ public class MyReader implements CSVReader {
 	}
 
 	@Override
-	public String[][] read(Reader reader) throws IOException, IllegalArgumentException {	
+	public String[][] read(Reader reader) throws IOException, IllegalArgumentException {
 
-//		final BufferedReader buffreader = new BufferedReader(reader);
-//		// System.out.println(countRows(buffreader));
-		
+		// final BufferedReader buffreader = new BufferedReader(reader);
+		// // System.out.println(countRows(buffreader));
+
 		final String[][] output;
 		int lines;
-		
+		int[] columnsInLine;
+
 		checkInputFormat(reader);
 		printArgument(reader);
 		lines = countLines(reader);
+		columnsInLine = countColumnsPerLine(reader, lines);
 		output = new String[lines][];
-		
-		for (int i = 0; i < lines; i++){
+
+		for (int i = 0; i < lines; i++) {
 			output[i] = buildLine(reader);
 		}
-		
+
 		reader.close();
 		return output;
 	}
-	
-	//input: Reader
-	//output: none. Throws exception if the inserted Text is not valid.
+
+	// input: Reader
+	// output: none. Throws exception if the inserted Text is not valid.
 	private void checkInputFormat(Reader reader) throws IllegalArgumentException, IOException {
-		
+
 		char c;
 
-		//check for empty argument.
+		// check for empty argument.
 		int j = reader.read();
 		if (j == -1) {
 			reader.close();
-			throw new IllegalArgumentException();		
+			throw new IllegalArgumentException();
 		}
-		
-		
-		c = (char)j;
-		
-		//step to the last char in the argument and safe it in variable c
-		for(int i = j; i != -1; i = reader.read()){			
-			
-			//if flag is set, skip the next char
-			if(FLAG){
+
+		c = (char) j;
+
+		// step to the last char in the argument and safe it in variable c
+		for (int i = j; i != -1; i = reader.read()) {
+
+			// if flag is set, skip the next char
+			if (FLAG) {
 				reader.read();
 				i = 0;
 				FLAG = false;
-			}
-			else if (i == BACKSLASH){
+			} else if (i == BACKSLASH) {
 				FLAG = true;
 			}
-			c = (char)i;
+			c = (char) i;
 		}
-		//c is the last char in the argument now. it has to be a '\n', or an exception is thrown
+		// c is the last char in the argument now. it has to be a '\n', or an
+		// exception is thrown
 		if (c != '\n') {
 			reader.close();
 			throw new IllegalArgumentException();
 		}
 		resetReader(reader);
-		//return;
-		//TODO: implement with Exceptions
+		// return;
+		// TODO: implement with Exceptions
 	}
-	
-	
-	
-	//input: Reader
-	//output: number of lines > int
+
+	// input: Reader
+	// output: number of lines > int
 	private int countLines(Reader reader) throws IOException {
 		markReader(reader);
-		int lines = 0;	
+		int lines = 0;
 		char c;
-		
-		for(int i = reader.read(); i != -1; i = reader.read()){
-			c = (char)i;			
-			//if the Flag is not set, check for '\n' and backslashes
-			
-				if (c == BACKSLASH) {
-					reader.read();
-				}
-				//in case of a Backslash, read the next char. It gets overwritten immediatly
-				else if (c == '\n') {
-					lines++;
-				}	
-		}		
-		
+
+		for (int i = reader.read(); i != -1; i = reader.read()) {
+			c = (char) i;
+			// if the Flag is not set, check for '\n' and backslashes
+
+			if (c == BACKSLASH) {
+				reader.read();
+			}
+			// in case of a Backslash, read the next char. It gets overwritten
+			// immediatly
+			else if (c == '\n') {
+				lines++;
+			}
+		}
+
 		resetReader(reader);
 		return lines;
-		
+
 	}
-	
-	//input: Reader
-	//output: number of columns > int
-	private int countColumns(Reader reader) throws IOException{
-		int columns = 1;	
+
+	// input: Reader
+	// output: number of columns > int
+	private int countColumns(Reader reader) throws IOException {
+		int columns = 1;
 		char c;
-		
-		for(int i = reader.read(); i != -1; i = reader.read()){
-			c = (char)i;			
-			//if the Flag is not set, check for '\n' and backslashes
-			
-				if (c == BACKSLASH) {
-					reader.read();
-				}
-				//in case of a Backslash, read the next char. It gets overwritten immediately
-				else if (c == ',') {
-					columns++;
-				}	
-				else if (c == '\n'){
-					resetReader(reader);
-					return columns;
-				}
-		}		
-		
-		
-		
+
+		for (int i = reader.read(); i != -1; i = reader.read()) {
+			c = (char) i;
+			// if the Flag is not set, check for '\n' and backslashes
+
+			if (c == BACKSLASH) {
+				reader.read();
+			}
+			// in case of a Backslash, read the next char. It gets overwritten
+			// immediately
+			else if (c == ',') {
+				columns++;
+			} else if (c == '\n') {
+				resetReader(reader);
+				return columns;
+			}
+		}
+
 		return -1;
-		//TODO: implement
+		// TODO: implement
 	}
-	
-	private String[] buildLine(Reader reader) throws IOException{
+
+	private String[] buildLine(Reader reader) throws IOException {
 		int columns = countColumns(reader);
 		String[] out = new String[columns];
 		System.out.println(columns);
-		for (int i = 0; i < out.length; i++){
+		for (int i = 0; i < out.length; i++) {
 			out[i] = buildCell(reader);
 		}
 		System.out.println(out.length);
-		//TODO: implement concatination of chars to String
+		// TODO: implement concatination of chars to String
 		return out;
 	}
-	
-	private String buildCell(Reader reader) throws IOException{
+
+	private String buildCell(Reader reader) throws IOException {
 		String out = "\"";
 		char c;
-		for(int i = reader.read(); i != -1; i = reader.read()){
-			c = (char)i;
-			if (FLAG){
+		for (int i = reader.read(); i != -1; i = reader.read()) {
+			c = (char) i;
+			if (FLAG) {
 				out += c;
 				FLAG = false;
-			}
-			else {
-				if(c == BACKSLASH){
+			} else {
+				if (c == BACKSLASH) {
 					FLAG = true;
-				}
-				else if(c == ',' || c == '\n'){
+				} else if (c == ',' || c == '\n') {
 					out += '"';
 					return out;
-				}
-				else out += c;
+				} else
+					out += c;
 			}
 		}
-		
+
 		return out;
-		
+
 	}
-	
-	
-	
+
+	private int[] countColumnsPerLine(Reader reader, int lines) throws IOException {
+		int[] out = new int[lines];
+		int i = reader.read();
+		int lin = 0;
+		char c;
+		int count = 1;
+		while (lin < lines && i != -1) {
+
+			c = (char) i;
+
+			// check for '\n' , comma and backslashes
+			// in case of a Backslash, read the next char. It gets overwritten
+			// immediately
+			if (c == BACKSLASH) {
+				i = reader.read();
+
+			} else if (c == ',') {
+				count++;
+
+			} else if (c == '\n') {
+				out[lin] = count;
+				lin++;
+				count = 1;
+			}
+			i = reader.read();
+
+		}
+		for (int grr = 0; grr < lines; grr++) {
+			System.out.println("Cells in line "+ (grr+1)+ ": "+out[grr]);
+		}
+		resetReader(reader);
+		return out;
+	}
 
 }
