@@ -16,6 +16,10 @@ public class MyReader implements CSVReader {
 	/**
 	 * Default Konstruktor.
 	 */
+	private static boolean FLAG = false;
+	private static final char BACKSLASH = '\\';
+	private static final char NEWLINE = '\n';
+	
 	public MyReader() {
 	}
 
@@ -171,28 +175,180 @@ public class MyReader implements CSVReader {
 		resetReader(br);
 		return arr;
 	}
+	
+	//prints out the inserted Arguments, for debugging purposes only
+	private void printArgument(Reader reader) throws IOException {
+		String out = "";
+		char c;
+		
+		int i = reader.read();
+		if(i == -1) System.out.println("Empty Input!");
+		while (i != -1){
+			c = (char)i;
+			if (c == '\n') c = '$';
+			out += c;
+			i = reader.read();
+		}
+		System.out.println(out);
+		reader.reset();
+	}
 
 	@Override
-	public String[][] read(Reader reader) throws IOException, IllegalArgumentException {
+	public String[][] read(Reader reader) throws IOException, IllegalArgumentException {	
 
-		final String[][] arr;
-		int length = 0;
-
-		final BufferedReader buffreader = new BufferedReader(reader);
-
-		checkCSVFormatIsCorrect(reader);
-
-		// System.out.println(countRows(buffreader));
-
-		length = countRows(buffreader);
-		arr = new String[length][];
-
-		for (int i = 0; i < length; i++) {
-			arr[i] = getData(buffreader);
+//		final BufferedReader buffreader = new BufferedReader(reader);
+//		// System.out.println(countRows(buffreader));
+		
+		final String[][] output;
+		int lines;
+		
+		checkInputFormat(reader);
+		printArgument(reader);
+		lines = countLines(reader);
+		output = new String[lines][];
+		
+		for (int i = 0; i < lines; i++){
+			output[i] = buildLine(reader);
 		}
+		
 		reader.close();
-
-		return arr;
+		return output;
 	}
+	
+	//input: Reader
+	//output: none. Throws exception if the inserted Text is not valid.
+	private void checkInputFormat(Reader reader) throws IllegalArgumentException, IOException {
+		
+		char c;
+
+		//check for empty argument.
+		int j = reader.read();
+		if (j == -1) {
+			reader.close();
+			throw new IllegalArgumentException();		
+		}
+		
+		
+		c = (char)j;
+		
+		//step to the last char in the argument and safe it in variable c
+		for(int i = j; i != -1; i = reader.read()){			
+			
+			//if flag is set, skip the next char
+			if(FLAG){
+				reader.read();
+				i = 0;
+				FLAG = false;
+			}
+			else if (i == BACKSLASH){
+				FLAG = true;
+			}
+			c = (char)i;
+		}
+		//c is the last char in the argument now. it has to be a '\n', or an exception is thrown
+		if (c != '\n') {
+			reader.close();
+			throw new IllegalArgumentException();
+		}
+		resetReader(reader);
+		//return;
+		//TODO: implement with Exceptions
+	}
+	
+	
+	
+	//input: Reader
+	//output: number of lines > int
+	private int countLines(Reader reader) throws IOException {
+		markReader(reader);
+		int lines = 0;	
+		char c;
+		
+		for(int i = reader.read(); i != -1; i = reader.read()){
+			c = (char)i;			
+			//if the Flag is not set, check for '\n' and backslashes
+			
+				if (c == BACKSLASH) {
+					reader.read();
+				}
+				//in case of a Backslash, read the next char. It gets overwritten immediatly
+				else if (c == '\n') {
+					lines++;
+				}	
+		}		
+		
+		resetReader(reader);
+		return lines;
+		
+	}
+	
+	//input: Reader
+	//output: number of columns > int
+	private int countColumns(Reader reader) throws IOException{
+		int columns = 1;	
+		char c;
+		
+		for(int i = reader.read(); i != -1; i = reader.read()){
+			c = (char)i;			
+			//if the Flag is not set, check for '\n' and backslashes
+			
+				if (c == BACKSLASH) {
+					reader.read();
+				}
+				//in case of a Backslash, read the next char. It gets overwritten immediately
+				else if (c == ',') {
+					columns++;
+				}	
+				else if (c == '\n'){
+					resetReader(reader);
+					return columns;
+				}
+		}		
+		
+		
+		
+		return -1;
+		//TODO: implement
+	}
+	
+	private String[] buildLine(Reader reader) throws IOException{
+		int columns = countColumns(reader);
+		String[] out = new String[columns];
+		System.out.println(columns);
+		for (int i = 0; i < out.length; i++){
+			out[i] = buildCell(reader);
+		}
+		System.out.println(out.length);
+		//TODO: implement concatination of chars to String
+		return out;
+	}
+	
+	private String buildCell(Reader reader) throws IOException{
+		String out = "\"";
+		char c;
+		for(int i = reader.read(); i != -1; i = reader.read()){
+			c = (char)i;
+			if (FLAG){
+				out += c;
+				FLAG = false;
+			}
+			else {
+				if(c == BACKSLASH){
+					FLAG = true;
+				}
+				else if(c == ',' || c == '\n'){
+					out += '"';
+					return out;
+				}
+				else out += c;
+			}
+		}
+		
+		return out;
+		
+	}
+	
+	
+	
 
 }
